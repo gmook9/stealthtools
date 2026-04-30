@@ -16,9 +16,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Public Workplace Tools",
+  title: "Stealth Tools",
   description:
-    "Client-side office utilities for image conversion, QR generation, JSON/XML translation, SQL compaction, and more.",
+    "Local-first utilities for developers and IT professionals. All tools run entirely in your browser with no backend processing, making them safe for use on shared workplace systems.",
 };
 
 export default function RootLayout({
