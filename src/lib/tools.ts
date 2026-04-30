@@ -3,6 +3,7 @@ import {
   FiCode,
   FiCommand,
   FiDatabase,
+  FiDroplet,
   FiFileText,
   FiHash,
   FiImage,
@@ -10,9 +11,12 @@ import {
   FiLink,
   FiLock,
   FiRefreshCw,
+  FiRepeat,
   FiSearch,
   FiShield,
+  FiSliders,
   FiClock,
+  FiCalendar,
   FiGrid,
   FiType,
 } from "react-icons/fi";
@@ -170,6 +174,49 @@ export const toolItems: ToolItem[] = [
     tags: ["Time", "Convert"],
     category: "Time",
     Icon: FiClock,
+  },
+  {
+    path: "/tools/jde-date",
+    title: "JDE Julian Date Converter",
+    summary:
+      "Convert JD Edwards CYYDDD Julian dates (e.g. 110131) to and from Gregorian dates.",
+    tags: ["JDE", "Julian", "ERP"],
+    category: "Time",
+    Icon: FiCalendar,
+  },
+  {
+    path: "/tools/cron",
+    title: "Cron Explainer",
+    summary:
+      "Explain a 5-field cron expression in plain English with field-by-field breakdown.",
+    tags: ["Cron", "Schedule"],
+    category: "Time",
+    Icon: FiRepeat,
+  },
+  {
+    path: "/tools/number-base",
+    title: "Number Base Converter",
+    summary:
+      "Convert integers between binary, octal, decimal, and hex with arbitrary BigInt precision.",
+    tags: ["Numbers", "Radix"],
+    category: "Encoding",
+    Icon: FiSliders,
+  },
+  {
+    path: "/tools/color-converter",
+    title: "Color Converter",
+    summary: "Convert colors between HEX, RGB, and HSL with a live preview swatch.",
+    tags: ["Color", "Design"],
+    category: "Generators",
+    Icon: FiDroplet,
+  },
+  {
+    path: "/tools/lorem-ipsum",
+    title: "Lorem Ipsum Generator",
+    summary: "Generate placeholder text in words, sentences, or paragraphs.",
+    tags: ["Lorem", "Placeholder"],
+    category: "Text",
+    Icon: FiFileText,
   },
 ];
 
