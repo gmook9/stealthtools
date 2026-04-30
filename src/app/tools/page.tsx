@@ -1,29 +1,15 @@
 import Link from "next/link";
 import { toolItems } from "@/lib/tools";
 
-export default function Home() {
+export default function ToolsIndexPage() {
   return (
     <section className="page-stack">
       <header className="hero-panel">
-        <p className="eyebrow">Workplace-Ready</p>
-        <h1 className="hero-title">Secure, Client-side Utility Hub</h1>
+        <p className="eyebrow">Tool Directory</p>
+        <h1 className="hero-title">Public Workplace Utilities</h1>
         <p className="hero-copy">
-          Use this site for common office conversion tasks without uploading files to a server.
-          Every tool here runs in your own browser context.
+          Each utility runs fully in the browser. No tool submits your data to a backend API.
         </p>
-        <div className="button-row">
-          <Link href="/tools" className="button-link">
-            Browse All Tools
-          </Link>
-          <a
-            href="https://github.com/gmook9/publictools"
-            target="_blank"
-            rel="noreferrer"
-            className="button-link button-ghost"
-          >
-            GitHub Repository
-          </a>
-        </div>
       </header>
 
       <div className="tool-grid">
@@ -39,7 +25,7 @@ export default function Home() {
               ))}
             </div>
             <Link href={tool.path} className="button-link">
-              Launch
+              Open Tool
             </Link>
           </article>
         ))}

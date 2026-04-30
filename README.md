@@ -1,36 +1,58 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Public Workplace Tools
 
-## Getting Started
+Client-side office utilities built with Next.js, React, Tailwind CSS, and TypeScript.
 
-First, run the development server:
+## Features
+
+- Image converter (PNG/JPG/WEBP) with local optimization
+- QR code generator (download PNG)
+- JSON <> XML translator
+- JSON viewer and validator
+- SQL compactor (one-line output)
+- Base64 text/file utility
+
+## Tech Stack
+
+- Next.js App Router + React
+- TypeScript
+- Tailwind CSS (v4)
+- qrcode
+- fast-xml-parser
+- sql-formatter
+- react-json-view-lite
+- browser-image-compression
+
+## Run Locally
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Security Model (Short and Sweet)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- No backend endpoints are used by tools.
+- File and text processing happens in browser memory only.
+- No uploads are required for conversion features.
+- CSP and hardening headers are enabled in Next config.
+- File-size limits are enforced on heavy parsers to reduce browser strain.
 
-## Learn More
+## Why This Is Safe For Workplace Usage
 
-To learn more about Next.js, take a look at the following resources:
+- Users can do transformations without sharing sensitive internal data.
+- The app can be hosted publicly while still processing private data locally.
+- Security headers reduce browser attack surface and framing risks.
+- Components avoid dangerous HTML injection patterns.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Build
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run build
+npm run start
+```
 
-## Deploy on Vercel
+## Deploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Deploy to Vercel as a standard Next.js application.
