@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { diffWordsWithSpace, type Change } from "diff";
 import ToolShell from "@/components/tool-shell";
 import StatusNote from "@/components/status-note";
@@ -10,35 +10,31 @@ const MAX_LENGTH = 200_000;
 export default function TextDiffPage() {
   const [left, setLeft] = useState("The quick brown fox jumps over the lazy dog.");
   const [right, setRight] = useState("The quick orange fox leaps over the lazy cat.");
+  const [changes, setChanges] = useState<Change[]>(() =>
+    diffWordsWithSpace(
+      "The quick brown fox jumps over the lazy dog.",
+      "The quick orange fox leaps over the lazy cat.",
+    ),
+  );
   const [status, setStatus] = useState("Ready");
   const [statusKind, setStatusKind] = useState<"info" | "success" | "error">("info");
 
-  const changes = useMemo<Change[]>(() => {
+  const compute = () => {
     if (left.length > MAX_LENGTH || right.length > MAX_LENGTH) {
-      return [];
+      setStatus(`Inputs exceed ${MAX_LENGTH.toLocaleString()} characters.`);
+      setStatusKind("error");
+      setChanges([]);
+      return;
     }
-    return diffWordsWithSpace(left, right);
-  }, [left, right]);
-
-  const overLimit = left.length > MAX_LENGTH || right.length > MAX_LENGTH;
-
-  const summary = useMemo(() => {
+    const next = diffWordsWithSpace(left, right);
+    setChanges(next);
     let added = 0;
     let removed = 0;
-    for (const change of changes) {
+    for (const change of next) {
       if (change.added) added += 1;
       if (change.removed) removed += 1;
     }
-    return { added, removed };
-  }, [changes]);
-
-  const compute = () => {
-    if (overLimit) {
-      setStatus(`Inputs exceed ${MAX_LENGTH.toLocaleString()} characters.`);
-      setStatusKind("error");
-      return;
-    }
-    setStatus(`Diff computed locally: ${summary.added} additions, ${summary.removed} removals.`);
+    setStatus(`Diff computed locally: ${added} additions, ${removed} removals.`);
     setStatusKind("success");
   };
 
@@ -55,7 +51,7 @@ export default function TextDiffPage() {
             rows={12}
             className="textarea"
             value={left}
-            onChange={(event) => setLeft(event.target.value)}
+            onChange={(ev) => setLeft(ev.target.value)}
           />
         </label>
         <label className="field-block">
@@ -64,7 +60,7 @@ export default function TextDiffPage() {
             rows={12}
             className="textarea"
             value={right}
-            onChange={(event) => setRight(event.target.value)}
+            onChange={(ev) => setRight(ev.target.value)}
           />
         </label>
       </div>
@@ -78,8 +74,8 @@ export default function TextDiffPage() {
       <StatusNote status={status} kind={statusKind} />
 
       <div className="diff-output" aria-label="Diff result">
-        {overLimit ? (
-          <p className="meta-note">Reduce input size to view diff.</p>
+        {changes.length === 0 ? (
+          <span className="meta-note">No diff yet. Click Compare.</span>
         ) : (
           changes.map((change, index) => {
             const className = change.added

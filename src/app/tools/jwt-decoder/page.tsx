@@ -1,43 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import ToolShell from "@/components/tool-shell";
 import StatusNote from "@/components/status-note";
-
-type DecodedJwt = {
-  header: unknown;
-  payload: unknown;
-  signature: string;
-};
-
-function base64UrlDecode(segment: string): string {
-  const padded = segment + "=".repeat((4 - (segment.length % 4)) % 4);
-  const base64 = padded.replace(/-/g, "+").replace(/_/g, "/");
-  const binary = atob(base64);
-  const bytes = Uint8Array.from(binary, (character) => character.charCodeAt(0));
-  return new TextDecoder().decode(bytes);
-}
-
-function tryParse(text: string): unknown {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
-}
-
-function decodeJwt(token: string): DecodedJwt {
-  const parts = token.trim().split(".");
-  if (parts.length !== 3) {
-    throw new Error("Token does not have three dot-separated segments.");
-  }
-
-  return {
-    header: tryParse(base64UrlDecode(parts[0])),
-    payload: tryParse(base64UrlDecode(parts[1])),
-    signature: parts[2],
-  };
-}
+import { decodeJwt, type DecodedJwt } from "@/lib/jwt";
 
 function formatTimestamp(value: unknown): string | null {
   if (typeof value !== "number" || !Number.isFinite(value)) return null;
@@ -48,33 +14,25 @@ function formatTimestamp(value: unknown): string | null {
 
 export default function JwtDecoderPage() {
   const [token, setToken] = useState("");
-  const [status, setStatus] = useState("Paste a JWT to inspect locally.");
+  const [decoded, setDecoded] = useState<DecodedJwt | null>(null);
+  const [status, setStatus] = useState("Paste a JWT then click Decode.");
   const [statusKind, setStatusKind] = useState<"info" | "success" | "error">("info");
-
-  const decoded = useMemo<DecodedJwt | null>(() => {
-    if (!token.trim()) return null;
-    try {
-      const result = decodeJwt(token);
-      return result;
-    } catch {
-      return null;
-    }
-  }, [token]);
 
   const handleDecode = () => {
     if (!token.trim()) {
-      setStatus("Paste a JWT to inspect locally.");
+      setStatus("Paste a JWT then click Decode.");
       setStatusKind("info");
+      setDecoded(null);
       return;
     }
-
     try {
-      decodeJwt(token);
+      const result = decodeJwt(token);
+      setDecoded(result);
       setStatus("Decoded locally. Signature is NOT verified by this tool.");
       setStatusKind("success");
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Invalid JWT.";
-      setStatus(message);
+      setDecoded(null);
+      setStatus(error instanceof Error ? error.message : "Invalid JWT.");
       setStatusKind("error");
     }
   };
@@ -88,7 +46,7 @@ export default function JwtDecoderPage() {
     <ToolShell
       eyebrow="Inspection Tool"
       title="JWT Decoder"
-      description="Decode JWT header and payload locally. This tool never validates the signature against any key."
+      description="Decode JWT header and payload locally. This tool never validates the signature."
     >
       <label className="field-label" htmlFor="jwt-input">
         JWT
@@ -97,7 +55,7 @@ export default function JwtDecoderPage() {
         id="jwt-input"
         rows={6}
         value={token}
-        onChange={(event) => setToken(event.target.value)}
+        onChange={(ev) => setToken(ev.target.value)}
         className="textarea"
         placeholder="eyJhbGciOi..."
       />
