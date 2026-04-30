@@ -2,22 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { toolItems } from "@/lib/tools";
+import { FiGithub, FiGrid, FiHome } from "react-icons/fi";
 
-const baseLinks = [{ href: "/", label: "Home" }, { href: "/tools", label: "All Tools" }];
+const links = [
+  { href: "/", label: "Home", Icon: FiHome },
+  { href: "/tools", label: "All Tools", Icon: FiGrid },
+];
 
 export default function SiteNav() {
   const pathname = usePathname();
 
-  const links = [
-    ...baseLinks,
-    ...toolItems.map((tool) => ({ href: tool.path, label: tool.title })),
-  ];
-
   return (
     <nav aria-label="Main navigation" className="site-nav">
       {links.map((link) => {
-        const isActive = pathname === link.href;
+        const isActive =
+          link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
 
         return (
           <Link
@@ -25,10 +24,20 @@ export default function SiteNav() {
             href={link.href}
             className={`nav-link ${isActive ? "nav-link-active" : ""}`}
           >
-            {link.label}
+            <link.Icon aria-hidden />
+            <span>{link.label}</span>
           </Link>
         );
       })}
+      <a
+        href="https://github.com/gmook9/publictools"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="nav-link"
+      >
+        <FiGithub aria-hidden />
+        <span>GitHub</span>
+      </a>
     </nav>
   );
 }

@@ -2,32 +2,20 @@
 
 import { ChangeEvent, useMemo, useState } from "react";
 import imageCompression from "browser-image-compression";
+import ToolShell from "@/components/tool-shell";
+import StatusNote from "@/components/status-note";
+import { downloadBlob } from "@/lib/download";
+import { sanitizeFileName } from "@/lib/sanitize";
 
 type OutputFormat = "image/png" | "image/jpeg" | "image/webp";
 
-const formatMap: Record<OutputFormat, string> = {
+const formatExt: Record<OutputFormat, string> = {
   "image/png": "png",
   "image/jpeg": "jpg",
   "image/webp": "webp",
 };
 
-function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = fileName;
-  anchor.click();
-  URL.revokeObjectURL(url);
-}
-
-function sanitizeBaseName(name: string): string {
-  return name
-    .replace(/\.[^/.]+$/, "")
-    .replace(/[^a-zA-Z0-9_-]+/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 60);
-}
+const MAX_BYTES = 20 * 1024 * 1024;
 
 function loadImage(file: File): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -54,44 +42,49 @@ export default function ImageConverterPage() {
   const [quality, setQuality] = useState(0.92);
   const [optimizeInput, setOptimizeInput] = useState(true);
   const [status, setStatus] = useState("Select an image to begin.");
+  const [statusKind, setStatusKind] = useState<"info" | "success" | "error">("info");
   const [busy, setBusy] = useState(false);
 
   const fileInfo = useMemo(() => {
     if (!file) return "No file selected";
-    const mb = (file.size / (1024 * 1024)).toFixed(2);
-    return `${file.name} (${mb} MB)`;
+    return `${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
   }, [file]);
+
+  const setMessage = (text: string, kind: "info" | "success" | "error" = "info") => {
+    setStatus(text);
+    setStatusKind(kind);
+  };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>) => {
     const selected = event.target.files?.[0] ?? null;
     if (!selected) {
       setFile(null);
-      setStatus("Select an image to begin.");
+      setMessage("Select an image to begin.");
       return;
     }
 
     if (!selected.type.startsWith("image/")) {
-      setStatus("Only image files are supported.");
+      setMessage("Only image files are supported.", "error");
       return;
     }
 
-    if (selected.size > 20 * 1024 * 1024) {
-      setStatus("Please choose an image under 20 MB.");
+    if (selected.size > MAX_BYTES) {
+      setMessage("Please choose an image under 20 MB.", "error");
       return;
     }
 
     setFile(selected);
-    setStatus("Ready to convert.");
+    setMessage("Ready to convert.", "info");
   };
 
   const convertImage = async () => {
     if (!file) {
-      setStatus("Please pick an image first.");
+      setMessage("Please pick an image first.", "error");
       return;
     }
 
     setBusy(true);
-    setStatus("Converting locally...");
+    setMessage("Converting locally...");
 
     try {
       let workingFile = file;
@@ -131,76 +124,78 @@ export default function ImageConverterPage() {
         );
       });
 
-      const cleanName = sanitizeBaseName(file.name) || "converted-image";
-      downloadBlob(convertedBlob, `${cleanName}.${formatMap[outputFormat]}`);
-      setStatus("Converted successfully. File downloaded.");
+      const cleanName = sanitizeFileName(file.name, "converted-image");
+      downloadBlob(convertedBlob, `${cleanName}.${formatExt[outputFormat]}`);
+      setMessage("Converted successfully. File downloaded.", "success");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Conversion failed.";
-      setStatus(message);
+      setMessage(message, "error");
     } finally {
       setBusy(false);
     }
   };
 
   return (
-    <section className="page-stack">
-      <header className="hero-panel">
-        <p className="eyebrow">Image Tool</p>
-        <h1 className="hero-title">Image Converter</h1>
-        <p className="hero-copy">
-          Convert and optimize images directly in your browser. Files never leave your machine.
-        </p>
-      </header>
+    <ToolShell
+      eyebrow="Image Tool"
+      title="Image Converter"
+      description="Convert and optimize images directly in your browser. Files never leave your machine."
+    >
+      <label className="field-label" htmlFor="image-file">
+        Source Image
+      </label>
+      <input
+        id="image-file"
+        type="file"
+        accept="image/png,image/jpeg,image/webp,image/gif,image/bmp"
+        onChange={handleFile}
+        className="input"
+      />
+      <p className="meta-note">{fileInfo}</p>
 
-      <div className="tool-panel">
-        <label className="field-label" htmlFor="image-file">
-          Source Image
+      <div className="grid-two">
+        <label className="field-block">
+          <span className="field-label">Output Format</span>
+          <select
+            value={outputFormat}
+            onChange={(event) => setOutputFormat(event.target.value as OutputFormat)}
+            className="input"
+          >
+            <option value="image/png">PNG</option>
+            <option value="image/jpeg">JPG</option>
+            <option value="image/webp">WEBP</option>
+          </select>
         </label>
-        <input id="image-file" type="file" accept="image/*" onChange={handleFile} className="input" />
-        <p className="meta-note">{fileInfo}</p>
 
-        <div className="grid-two">
-          <label className="field-block">
-            <span className="field-label">Output Format</span>
-            <select
-              value={outputFormat}
-              onChange={(event) => setOutputFormat(event.target.value as OutputFormat)}
-              className="input"
-            >
-              <option value="image/png">PNG</option>
-              <option value="image/jpeg">JPG</option>
-              <option value="image/webp">WEBP</option>
-            </select>
-          </label>
-
-          <label className="field-block">
-            <span className="field-label">Quality ({Math.round(quality * 100)}%)</span>
-            <input
-              type="range"
-              min={0.4}
-              max={1}
-              step={0.01}
-              value={quality}
-              onChange={(event) => setQuality(Number(event.target.value))}
-            />
-          </label>
-        </div>
-
-        <label className="checkbox-row">
+        <label className="field-block">
+          <span className="field-label">Quality ({Math.round(quality * 100)}%)</span>
           <input
-            type="checkbox"
-            checked={optimizeInput}
-            onChange={(event) => setOptimizeInput(event.target.checked)}
+            type="range"
+            min={0.4}
+            max={1}
+            step={0.01}
+            value={quality}
+            onChange={(event) => setQuality(Number(event.target.value))}
           />
-          <span>Optimize before conversion for smaller output files</span>
         </label>
+      </div>
 
+      <label className="checkbox-row">
+        <input
+          type="checkbox"
+          checked={optimizeInput}
+          onChange={(event) => setOptimizeInput(event.target.checked)}
+        />
+        <span>Optimize before conversion for smaller output files</span>
+      </label>
+
+      <div className="button-row">
         <button type="button" onClick={convertImage} className="button-link" disabled={busy}>
           {busy ? "Working..." : "Convert And Download"}
         </button>
-
-        <p className="status-note">{status}</p>
       </div>
-    </section>
+
+      <StatusNote status={status} kind={statusKind} />
+    </ToolShell>
   );
 }

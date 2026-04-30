@@ -2,42 +2,48 @@
 
 import { ChangeEvent, useMemo, useState } from "react";
 import { JsonView, allExpanded, defaultStyles } from "react-json-view-lite";
+import ToolShell from "@/components/tool-shell";
+import StatusNote from "@/components/status-note";
+import CopyButton from "@/components/copy-button";
 
 type JsonTreeData = Record<string, unknown> | unknown[];
 
-function normalizeJsonTree(value: unknown): JsonTreeData {
-  if (Array.isArray(value)) {
-    return value;
-  }
+const MAX_FILE_BYTES = 3 * 1024 * 1024;
 
+function normalizeJsonTree(value: unknown): JsonTreeData {
+  if (Array.isArray(value)) return value;
   if (value !== null && typeof value === "object") {
     return value as Record<string, unknown>;
   }
-
   return { value };
 }
 
 export default function JsonViewerPage() {
   const [input, setInput] = useState('{\n  "team": ["ops", "engineering"],\n  "enabled": true\n}');
   const [status, setStatus] = useState("Ready");
+  const [statusKind, setStatusKind] = useState<"info" | "success" | "error">("info");
   const [parsed, setParsed] = useState<JsonTreeData>({
     team: ["ops", "engineering"],
     enabled: true,
   });
 
   const byteSize = useMemo(() => {
-    const bytes = new TextEncoder().encode(input).length;
-    return `${bytes.toLocaleString()} bytes`;
+    return `${new TextEncoder().encode(input).length.toLocaleString()} bytes`;
   }, [input]);
+
+  const setMessage = (text: string, kind: "info" | "success" | "error" = "info") => {
+    setStatus(text);
+    setStatusKind(kind);
+  };
 
   const validate = () => {
     try {
       const next = JSON.parse(input);
       setParsed(normalizeJsonTree(next));
-      setStatus("Valid JSON. Viewer updated.");
+      setMessage("Valid JSON. Viewer updated.", "success");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Invalid JSON";
-      setStatus(`JSON error: ${message}`);
+      setMessage(`JSON error: ${message}`, "error");
     }
   };
 
@@ -46,10 +52,22 @@ export default function JsonViewerPage() {
       const next = JSON.parse(input);
       setInput(JSON.stringify(next, null, 2));
       setParsed(normalizeJsonTree(next));
-      setStatus("JSON formatted.");
+      setMessage("JSON formatted.", "success");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Invalid JSON";
-      setStatus(`JSON error: ${message}`);
+      setMessage(`JSON error: ${message}`, "error");
+    }
+  };
+
+  const minify = () => {
+    try {
+      const next = JSON.parse(input);
+      setInput(JSON.stringify(next));
+      setParsed(normalizeJsonTree(next));
+      setMessage("JSON minified.", "success");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Invalid JSON";
+      setMessage(`JSON error: ${message}`, "error");
     }
   };
 
@@ -57,58 +75,62 @@ export default function JsonViewerPage() {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 3 * 1024 * 1024) {
-      setStatus("Please keep JSON files under 3 MB for browser responsiveness.");
+    if (file.size > MAX_FILE_BYTES) {
+      setMessage("Please keep JSON files under 3 MB for browser responsiveness.", "error");
       return;
     }
 
     const text = await file.text();
     setInput(text);
-    setStatus("File loaded. Validate to inspect.");
+    setMessage("File loaded. Validate to inspect.", "info");
   };
 
   return (
-    <section className="page-stack">
-      <header className="hero-panel">
-        <p className="eyebrow">Inspection Tool</p>
-        <h1 className="hero-title">JSON Viewer</h1>
-        <p className="hero-copy">
-          Validate and inspect JSON in a readable tree. Parsing happens entirely in your browser.
-        </p>
-      </header>
+    <ToolShell
+      eyebrow="Inspection Tool"
+      title="JSON Viewer"
+      description="Validate and inspect JSON in a readable tree. Parsing happens entirely in your browser."
+    >
+      <label className="field-label" htmlFor="json-file">
+        Load JSON File
+      </label>
+      <input
+        id="json-file"
+        type="file"
+        accept="application/json,.json,text/plain"
+        onChange={uploadFile}
+        className="input"
+      />
 
-      <div className="tool-panel">
-        <label className="field-label" htmlFor="json-file">
-          Load JSON File
-        </label>
-        <input id="json-file" type="file" accept="application/json,.json" onChange={uploadFile} className="input" />
+      <label className="field-label" htmlFor="json-input">
+        JSON Input ({byteSize})
+      </label>
+      <textarea
+        id="json-input"
+        rows={14}
+        value={input}
+        onChange={(event) => setInput(event.target.value)}
+        className="textarea"
+      />
 
-        <label className="field-label" htmlFor="json-input">
-          JSON Input ({byteSize})
-        </label>
-        <textarea
-          id="json-input"
-          rows={14}
-          value={input}
-          onChange={(event) => setInput(event.target.value)}
-          className="textarea"
-        />
-
-        <div className="button-row">
-          <button type="button" className="button-link" onClick={validate}>
-            Validate
-          </button>
-          <button type="button" className="button-link button-ghost" onClick={prettify}>
-            Prettify
-          </button>
-        </div>
-
-        <p className="status-note">{status}</p>
-
-        <div className="json-tree-shell">
-          <JsonView data={parsed} style={defaultStyles} shouldExpandNode={allExpanded} />
-        </div>
+      <div className="button-row">
+        <button type="button" className="button-link" onClick={validate}>
+          Validate
+        </button>
+        <button type="button" className="button-link button-ghost" onClick={prettify}>
+          Prettify
+        </button>
+        <button type="button" className="button-link button-ghost" onClick={minify}>
+          Minify
+        </button>
+        <CopyButton value={input} label="Copy" />
       </div>
-    </section>
+
+      <StatusNote status={status} kind={statusKind} />
+
+      <div className="json-tree-shell">
+        <JsonView data={parsed} style={defaultStyles} shouldExpandNode={allExpanded} />
+      </div>
+    </ToolShell>
   );
 }
