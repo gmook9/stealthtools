@@ -18,7 +18,7 @@ const plexMono = IBM_Plex_Mono({
 export const metadata: Metadata = {
   title: "Stealth Tools",
   description:
-    "Local-first utilities for developers and IT professionals. All tools run entirely in your browser with no backend processing, making them safe for use on shared workplace systems.",
+    "Local-first utilities for developers",
 };
 
 export default function RootLayout({
@@ -37,8 +37,7 @@ export default function RootLayout({
             <Link href="/" className="brand">
               <span className="brand-dot" aria-hidden="true" />
               <div>
-                <strong>Public Workplace Tools</strong>
-                <p>All processing stays local in your browser.</p>
+                <strong>Stealth Tools</strong>
               </div>
             </Link>
             <SiteNav />
