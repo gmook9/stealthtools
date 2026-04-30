@@ -1,8 +1,8 @@
-# Public Workplace Tools
+# Stealth Tools — Zero backend. Zero tracking. Just tools
 
 A client-side suite of office utilities. Built with **Next.js (App Router)**, **React**, **TypeScript**, and **Tailwind CSS**. Every tool runs entirely in your browser. No backend, no uploads, no telemetry.
 
-Live source: <https://github.com/gmook9/publictools>
+Live source: <https://github.com/gmook9/stealthtools>
 
 ---
 
@@ -123,44 +123,4 @@ Open <http://localhost:3000>.
 ```powershell
 npm run build
 npm run start
-```
-
-The site is fully static and deploys cleanly to Vercel or any static host that supports Next.js header overrides.
-
-## Project Layout
-
-```
-src/
-  app/
-    layout.tsx            # Global shell, fonts, nav, footer
-    page.tsx              # Home with feature highlights and tool grid
-    globals.css           # Theme tokens, components, responsive rules
-    tools/
-      page.tsx            # Categorized index of all tools
-      base64/
-      case-converter/
-      csv-json/
-      hash/
-      image-converter/
-      json-viewer/
-      json-xml/
-      jwt-decoder/
-      password/
-      qr-generator/
-      regex-tester/
-      sql-compactor/
-      text-diff/
-      timestamp/
-      url-encoder/
-      uuid/
-  components/
-    site-nav.tsx
-    tool-shell.tsx
-    copy-button.tsx
-    status-note.tsx
-  lib/
-    tools.ts              # Tool registry, categories, icons
-    download.ts           # Safe blob/text download helpers
-    sanitize.ts           # Filename sanitization
-next.config.ts            # Security headers
 ```
