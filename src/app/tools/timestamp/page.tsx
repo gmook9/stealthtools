@@ -13,16 +13,19 @@ import {
 type Mode = "epoch" | "iso";
 
 export default function TimestampPage() {
-  const [now, setNow] = useState(() => new Date());
+  const [now, setNow] = useState<Date | null>(null);
   const [mode, setMode] = useState<Mode>("epoch");
-  const [input, setInput] = useState(String(Math.floor(Date.now() / 1000)));
-  const [parsed, setParsed] = useState<ParsedTimestamp | null>(() =>
-    parseEpochInput(String(Math.floor(Date.now() / 1000))),
-  );
+  const [input, setInput] = useState("");
+  const [parsed, setParsed] = useState<ParsedTimestamp | null>(null);
   const [status, setStatus] = useState("Ready");
   const [statusKind, setStatusKind] = useState<"info" | "success" | "error">("info");
 
   useEffect(() => {
+    const initial = new Date();
+    setNow(initial);
+    const seconds = String(Math.floor(initial.getTime() / 1000));
+    setInput(seconds);
+    setParsed(parseEpochInput(seconds));
     const id = window.setInterval(() => setNow(new Date()), 1000);
     return () => window.clearInterval(id);
   }, []);
@@ -58,8 +61,9 @@ export default function TimestampPage() {
       description="Convert between Unix epoch seconds, milliseconds, ISO 8601, and human-readable formats."
     >
       <p className="meta-note">
-        Current epoch: <strong>{Math.floor(now.getTime() / 1000)}</strong> &middot; ISO:{" "}
-        <strong>{now.toISOString()}</strong>
+        Current epoch:{" "}
+        <strong>{now ? Math.floor(now.getTime() / 1000) : "—"}</strong> &middot; ISO:{" "}
+        <strong>{now ? now.toISOString() : "—"}</strong>
       </p>
 
       <div className="grid-two">
